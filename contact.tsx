@@ -150,12 +150,18 @@ const SkipToContentLink = () => (
 // FIX: Updated Header to be consistent with the more accessible and feature-rich version in other files.
 const Header = () => {
   const [scrolled, setScrolled] = useState(false);
+  const navRef = useRef<HTMLUListElement>(null);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isServicesDropdownOpen, setIsServicesDropdownOpen] = useState(false);
-  
+
   const burgerMenuRef = useRef<HTMLButtonElement>(null);
   const servicesToggleRef = useRef<HTMLAnchorElement>(null);
   const servicesDropdownContainerRef = useRef<HTMLLIElement>(null);
+
+  const closeMobileNav = () => {
+    setIsMobileNavOpen(false);
+    burgerMenuRef.current?.focus();
+  };
 
   const closeServicesDropdown = (shouldFocusToggle = true) => {
     if (isServicesDropdownOpen) {
@@ -198,14 +204,18 @@ const Header = () => {
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    const timer = setTimeout(() => navRef.current?.classList.add('animate-in'), 300);
+    return () => {
+        window.removeEventListener('scroll', handleScroll);
+        clearTimeout(timer);
+    };
   }, []);
 
   const handleServicesClick = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsServicesDropdownOpen(prev => !prev);
   };
-  
+
   const handleDropdownItemKeyDown = (e: React.KeyboardEvent<HTMLAnchorElement>) => {
     const items = Array.from(
       servicesDropdownContainerRef.current?.querySelectorAll<HTMLAnchorElement>('.dropdown-link-item') || []
@@ -225,22 +235,19 @@ const Header = () => {
     }
   };
 
+  const headerClasses = `app-header ${scrolled ? 'scrolled' : ''} on-light`;
+
   return (
-    <header className={`app-header ${scrolled ? 'scrolled' : ''}`}>
-      <div className="logo">
-        <AppLink href="/index.html">
-          <img src="https://res.cloudinary.com/dj3vhocuf/image/upload/v1760896759/Blue_Bold_Office_Idea_Logo_250_x_80_px_7_uatyqd.png" alt="Taj Design Consult Logo" className="logo-image" />
-        </AppLink>
-      </div>
+    <header className={headerClasses}>
       <nav className="main-nav" aria-label="Main navigation">
-        <ul>
+        <ul ref={navRef}>
           {navLinks.map((link) => (
-             <li 
-              key={link.name} 
+            <li
+              key={link.name}
               className={`${link.subLinks ? 'has-dropdown' : ''} ${link.name === 'Services' && isServicesDropdownOpen ? 'open' : ''}`}
               ref={link.name === 'Services' ? servicesDropdownContainerRef : null}
             >
-              <AppLink 
+              <AppLink
                 ref={link.name === 'Services' ? servicesToggleRef : null}
                 href={link.href}
                 id={link.name === 'Services' ? 'services-menu-toggle' : undefined}
@@ -281,9 +288,14 @@ const Header = () => {
           ))}
         </ul>
       </nav>
-      <button 
+      <div className="logo">
+        <AppLink href="/index.html">
+          <img src="https://res.cloudinary.com/dj3vhocuf/image/upload/v1760896759/Blue_Bold_Office_Idea_Logo_250_x_80_px_7_uatyqd.png" alt="Taj Design Consult Logo" className="logo-image" />
+        </AppLink>
+      </div>
+      <button
         ref={burgerMenuRef}
-        className="burger-menu" 
+        className="burger-menu"
         onClick={() => setIsMobileNavOpen(true)}
         aria-label="Open navigation menu"
         aria-controls="mobile-nav"
